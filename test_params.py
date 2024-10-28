@@ -6,11 +6,14 @@ import itertools
 
 file_path = "/home/michalnovak/skola/mrs/mrs_apptainer/user_ros_workspace/src/mrs_multirotor_simulator/config/multirotor_simulator.yaml"
 
-def run_simulation():
+def run_simulation(t):
     # Start the tmux session via xterm
-    subprocess.run(['xterm', '-hold', '-geometry', '100x40', '-fa', 'Monospace', '-fs', '14', '-e', 'bash', '-c', '/home/michalnovak/skola/mrs/mrs_apptainer/testparams/run_sim.sh'])
-    # Add a short delay to allow the tmux session to start
-    time.sleep(2)
+    try:    
+        subprocess.run(['xterm', '-geometry', '100x40', '-fa', 'Monospace', '-fs', '14', '-e', 'bash', '-c', '/home/michalnovak/skola/mrs/mrs_apptainer/testparams/run_sim.sh'], timeout=t+20)
+        # Add a short delay to allow the tmux session to start
+        time.sleep(2)
+    except subprocess.TimeoutExpired:
+        print(f"xterm process exceeded {t} seconds and was terminated.")
 
 def wait_for_tmux_session(session_name, socket_name, timeout=60, interval=1):
     start_time = time.time()
@@ -102,7 +105,7 @@ def run_session(t):
     socket_name = "mrs"
     num_panes = 10
     
-    th_run_sim = threading.Thread(target=run_simulation)
+    th_run_sim = threading.Thread(target=run_simulation, args=(t,))
     th_run_sim.start()
     
     # Wait for the tmux session to appear on the correct socket
@@ -164,12 +167,12 @@ def write_params_to_file(file_path, alp0, alp1, alp2, bet0, bet1, bet2):
 
 
 if __name__ == "__main__":
-    alp0_comb = [1]
+    alp0_comb = [0.05, 0.2]
     alp1_comb = [0.08]
-    alp2_comb = [0.5]
-    bet0_comb = [0.5]
+    alp2_comb = [0]
+    bet0_comb = [0.01]
     bet1_comb = [0.08]
-    bet2_comb = [0.5]
+    bet2_comb = [0]
     results_file_path = '/home/michalnovak/skola/mrs/mrs_apptainer/testparams/metrics_results.txt'
     parameter_combinations = list(itertools.product(alp0_comb, alp1_comb, alp2_comb, bet0_comb, bet1_comb, bet2_comb))
     for alp0, alp1, alp2, bet0, bet1, bet2 in parameter_combinations:
